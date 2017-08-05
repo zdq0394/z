@@ -22,11 +22,11 @@ func SetMode(s *mgo.Session, mode int, refresh bool) {
 		log.Fatalln("Invalid mgo mode")
 	}
 	switch mode {
-	case 0:
+	case MgoMode.Eventual:
 		s.SetMode(mgo.Eventual, refresh)
-	case 1:
+	case MgoMode.Monotonic:
 		s.SetMode(mgo.Monotonic, refresh)
-	case 2:
+	case MgoMode.Strong:
 		s.SetMode(mgo.Strong, refresh)
 	}
 }
