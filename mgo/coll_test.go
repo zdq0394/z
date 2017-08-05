@@ -8,6 +8,16 @@ import (
 	"labix.org/v2/mgo"
 )
 
+func TestParseIndex(t *testing.T) {
+	doTestParseIndex(
+		t, "uuid,states,id_deleted :unique,sparse",
+		mgo.Index{Key: []string{"uuid", "states", "id_deleted"}, Sparse: true, Unique: true})
+
+	doTestParseIndex(
+		t, "email :background",
+		mgo.Index{Key: []string{"email"}, Background: true})
+}
+
 func doTestParseIndex(t *testing.T, colIndex string, expected mgo.Index) {
 	var index mgo.Index
 	pos := strings.Index(colIndex, ":")
@@ -20,14 +30,4 @@ func doTestParseIndex(t *testing.T, colIndex string, expected mgo.Index) {
 	if !reflect.DeepEqual(index, expected) {
 		t.Fatal("parseIndex failed:", colIndex, "expected:", expected, "real:", index)
 	}
-}
-
-func TestParseIndex(t *testing.T) {
-	doTestParseIndex(
-		t, "uid,status,delete :unique,sparse",
-		mgo.Index{Key: []string{"uid", "status", "delete"}, Sparse: true, Unique: true})
-
-	doTestParseIndex(
-		t, "email :background",
-		mgo.Index{Key: []string{"email"}, Background: true})
 }
