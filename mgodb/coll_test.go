@@ -1,4 +1,4 @@
-package mgoutil
+package mgodb
 
 import (
 	"reflect"

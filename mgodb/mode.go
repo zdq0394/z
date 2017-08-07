@@ -1,4 +1,4 @@
-package mgoutil
+package mgodb
 
 import (
 	log "github.com/Sirupsen/logrus"
