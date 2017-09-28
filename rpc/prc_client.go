@@ -61,6 +61,22 @@ func newRequest(method, url1 string, body io.Reader) (req *http.Request, err err
 	return
 }
 
+func setHeader(req *http.Request, headerParams map[string][]string) {
+	if headerParams == nil {
+		return
+	}
+	for key, values := range headerParams {
+		if values == nil {
+			continue
+		}
+		//Firstly clear old values
+		req.Header.Del(key)
+		for _, value := range values {
+			req.Header.Add(key, value)
+		}
+	}
+}
+
 // Do ...
 func (r Client) Do(ctx context.Context, req *http.Request) (resp *http.Response, err error) {
 	if ctx == nil {
