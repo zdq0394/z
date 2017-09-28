@@ -57,70 +57,8 @@ func newRequest(method, url1 string, body io.Reader) (req *http.Request, err err
 	return
 }
 
-func (r Client) DoRequest(ctx c.Context, method, url string) (resp *http.Response, err error) {
-
-	req, err := newRequest(method, url, nil)
-	if err != nil {
-		return
-	}
-	return r.Do(ctx, req)
-}
-
-func (r Client) DoRequestWith(
-	ctx c.Context, method, url1 string,
-	bodyType string, body io.Reader, bodyLength int) (resp *http.Response, err error) {
-
-	req, err := newRequest(method, url1, body)
-	if err != nil {
-		return
-	}
-	req.Header.Set("Content-Type", bodyType)
-	req.ContentLength = int64(bodyLength)
-	return r.Do(ctx, req)
-}
-
-func (r Client) DoRequestWith64(
-	ctx c.Context, method, url1 string,
-	bodyType string, body io.Reader, bodyLength int64) (resp *http.Response, err error) {
-
-	req, err := newRequest(method, url1, body)
-	if err != nil {
-		return
-	}
-	req.Header.Set("Content-Type", bodyType)
-	req.ContentLength = bodyLength
-	return r.Do(ctx, req)
-}
-
-func (r Client) DoRequestWithForm(
-	ctx c.Context, method, url1 string, data map[string][]string) (resp *http.Response, err error) {
-
-	msg := url.Values(data).Encode()
-	if method == "GET" || method == "HEAD" || method == "DELETE" {
-		if strings.ContainsRune(url1, '?') {
-			url1 += "&"
-		} else {
-			url1 += "?"
-		}
-		return r.DoRequest(ctx, method, url1+msg)
-	}
-	return r.DoRequestWith(
-		ctx, method, url1, "application/x-www-form-urlencoded", strings.NewReader(msg), len(msg))
-}
-
-func (r Client) DoRequestWithJson(
-	ctx c.Context, method, url1 string, data interface{}) (resp *http.Response, err error) {
-
-	msg, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-	return r.DoRequestWith(
-		ctx, method, url1, "application/json", bytes.NewReader(msg), len(msg))
-}
-
+// Do ...
 func (r Client) Do(ctx c.Context, req *http.Request) (resp *http.Response, err error) {
-
 	if ctx == nil {
 		ctx = c.Background()
 	}
@@ -137,7 +75,7 @@ func (r Client) Do(ctx c.Context, req *http.Request) (resp *http.Response, err e
 		req.Header.Set("User-Agent", UserAgent)
 	}
 
-	transport := r.Transport // don't change r.Transport
+	transport := r.Transport
 	if transport == nil {
 		transport = http.DefaultTransport
 	}
@@ -169,6 +107,53 @@ func (r Client) Do(ctx c.Context, req *http.Request) (resp *http.Response, err e
 	return
 }
 
+//DoRequest ...
+func (r Client) DoRequest(ctx c.Context, method, url string) (resp *http.Response, err error) {
+	req, err := newRequest(method, url, nil)
+	if err != nil {
+		return
+	}
+	return r.Do(ctx, req)
+}
+
+//DoRequestWith ...
+func (r Client) DoRequestWith(ctx c.Context, method, url1 string, bodyType string, body io.Reader, bodyLength int) (resp *http.Response, err error) {
+
+	req, err := newRequest(method, url1, body)
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", bodyType)
+	req.ContentLength = int64(bodyLength)
+	return r.Do(ctx, req)
+}
+
+//DoRequestWithForm ...
+func (r Client) DoRequestWithForm(ctx c.Context, method, url1 string, data map[string][]string) (resp *http.Response, err error) {
+
+	msg := url.Values(data).Encode()
+	if method == "GET" || method == "HEAD" || method == "DELETE" {
+		if strings.ContainsRune(url1, '?') {
+			url1 += "&"
+		} else {
+			url1 += "?"
+		}
+		return r.DoRequest(ctx, method, url1+msg)
+	}
+	return r.DoRequestWith(ctx, method, url1, "application/x-www-form-urlencoded", strings.NewReader(msg), len(msg))
+}
+
+//DoRequestWithJSON ...
+func (r Client) DoRequestWithJSON(ctx c.Context, method, url1 string, data interface{}) (resp *http.Response, err error) {
+
+	msg, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+	return r.DoRequestWith(ctx, method, url1, "application/json", bytes.NewReader(msg), len(msg))
+}
+
+//ErrorInfo ...
 type ErrorInfo struct {
 	Err   string `json:"error,omitempty"`
 	Key   string `json:"key,omitempty"`
@@ -177,22 +162,23 @@ type ErrorInfo struct {
 	Code  int    `json:"code"`
 }
 
+//ErrorDetail ...
 func (r *ErrorInfo) ErrorDetail() string {
-
 	msg, _ := json.Marshal(r)
 	return string(msg)
 }
 
 func (r *ErrorInfo) Error() string {
-
 	return r.Err
 }
 
+//RpcError ...
 func (r *ErrorInfo) RpcError() (code, errno int, key, err string) {
 
 	return r.Code, r.Errno, r.Key, r.Err
 }
 
+//HttpCode ...
 func (r *ErrorInfo) HttpCode() int {
 
 	return r.Code
@@ -219,6 +205,7 @@ func parseError(e *ErrorInfo, r io.Reader) {
 	e.Err = string(body)
 }
 
+// ResponseError ...
 func ResponseError(resp *http.Response) (err error) {
 
 	e := &ErrorInfo{
@@ -236,8 +223,8 @@ func ResponseError(resp *http.Response) (err error) {
 	return e
 }
 
+// CallRet ...
 func CallRet(ctx c.Context, ret interface{}, resp *http.Response) (err error) {
-
 	defer func() {
 		io.Copy(ioutil.Discard, resp.Body)
 		resp.Body.Close()
@@ -257,9 +244,8 @@ func CallRet(ctx c.Context, ret interface{}, resp *http.Response) (err error) {
 	return ResponseError(resp)
 }
 
-func (r Client) CallWithForm(
-	ctx c.Context, ret interface{}, method, url1 string, param map[string][]string) (err error) {
-
+// CallWithForm ...
+func (r Client) CallWithForm(ctx c.Context, ret interface{}, method, url1 string, param map[string][]string) (err error) {
 	resp, err := r.DoRequestWithForm(ctx, method, url1, param)
 	if err != nil {
 		return err
@@ -267,19 +253,17 @@ func (r Client) CallWithForm(
 	return CallRet(ctx, ret, resp)
 }
 
-func (r Client) CallWithJson(
-	ctx c.Context, ret interface{}, method, url1 string, param interface{}) (err error) {
-
-	resp, err := r.DoRequestWithJson(ctx, method, url1, param)
+// CallWithJSON ...
+func (r Client) CallWithJSON(ctx c.Context, ret interface{}, method, url1 string, param interface{}) (err error) {
+	resp, err := r.DoRequestWithJSON(ctx, method, url1, param)
 	if err != nil {
 		return err
 	}
 	return CallRet(ctx, ret, resp)
 }
 
-func (r Client) CallWith(
-	ctx c.Context, ret interface{}, method, url1, bodyType string, body io.Reader, bodyLength int) (err error) {
-
+// CallWith ...
+func (r Client) CallWith(ctx c.Context, ret interface{}, method, url1, bodyType string, body io.Reader, bodyLength int) (err error) {
 	resp, err := r.DoRequestWith(ctx, method, url1, bodyType, body, bodyLength)
 	if err != nil {
 		return err
@@ -287,18 +271,8 @@ func (r Client) CallWith(
 	return CallRet(ctx, ret, resp)
 }
 
-func (r Client) CallWith64(
-	ctx c.Context, ret interface{}, method, url1, bodyType string, body io.Reader, bodyLength int64) (err error) {
-
-	resp, err := r.DoRequestWith64(ctx, method, url1, bodyType, body, bodyLength)
-	if err != nil {
-		return err
-	}
-	return CallRet(ctx, ret, resp)
-}
-
-func (r Client) Call(
-	ctx c.Context, ret interface{}, method, url1 string) (err error) {
+//Call ...
+func (r Client) Call(ctx c.Context, ret interface{}, method, url1 string) (err error) {
 
 	resp, err := r.DoRequestWith(ctx, method, url1, "application/x-www-form-urlencoded", nil, 0)
 	if err != nil {
