@@ -73,8 +73,5 @@ func (c Credentials) Remove(credentialsID string) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != 302 {
-		return fmt.Errorf("Remove credentials %s with status code %d", credentialsID, resp.StatusCode)
-	}
 	return nil
 }
