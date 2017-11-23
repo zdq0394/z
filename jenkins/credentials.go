@@ -69,7 +69,7 @@ func (c Credentials) GetAll() ([]UserCredential, error) {
 // Remove /credentials/store/system/domain/_/credential/auto-test-888/doDelete
 func (c Credentials) Remove(credentialsID string) error {
 	endpoint := fmt.Sprintf("%scredential/%s/doDelete", c.Base, credentialsID)
-	resp, err := c.Jenkins.Requester.Post(endpoint, nil, nil, nil)
+	_, err := c.Jenkins.Requester.Post(endpoint, nil, nil, nil)
 	if err != nil {
 		return err
 	}
