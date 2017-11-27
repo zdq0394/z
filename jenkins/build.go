@@ -198,6 +198,17 @@ func (b *Build) GetConsoleOutput() string {
 	return content
 }
 
+func (b *Build) GetConsoleOutputWithTimestamp() string {
+	url := b.Base + "/timestamps"
+	queryMap := map[string]string{
+		"time":      "HH:mm:ss.S",
+		"appendLog": "",
+	}
+	var content string
+	b.Jenkins.Requester.GetXML(url, &content, queryMap)
+	return content
+}
+
 func (b *Build) GetCauses() ([]map[string]interface{}, error) {
 	_, err := b.Poll()
 	if err != nil {
