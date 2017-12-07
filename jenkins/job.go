@@ -23,12 +23,13 @@ type JobBuild struct {
 }
 
 type JobBuildInfo struct {
-	Number    int64
-	ID        int64
-	Result    string
-	Timestamp int64
-	URL       string
-	Duration  int64
+	Number        int64
+	ID            int64
+	Result        string
+	Timestamp     int64
+	URL           string
+	Duration      int64
+	ConsoleOutput string
 }
 
 type InnerJob struct {
