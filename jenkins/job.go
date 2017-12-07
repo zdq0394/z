@@ -22,6 +22,15 @@ type JobBuild struct {
 	URL    string
 }
 
+type JobBuildInfo struct {
+	Number    int64
+	ID        int64
+	Result    string
+	Timestamp int64
+	URL       string
+	Duration  int64
+}
+
 type InnerJob struct {
 	Name  string `json:"name"`
 	Url   string `json:"url"`
@@ -174,6 +183,18 @@ func (j *Job) GetAllBuildIds() ([]JobBuild, error) {
 		Builds []JobBuild `json:"allBuilds"`
 	}
 	_, err := j.Jenkins.Requester.GetJSON(j.Base, &buildsResp, map[string]string{"tree": "allBuilds[number,url]"})
+	if err != nil {
+		return nil, err
+	}
+	return buildsResp.Builds, nil
+}
+
+// Returns All Builds
+func (j *Job) GetAllBuildInfos() ([]JobBuildInfo, error) {
+	var buildsResp struct {
+		Builds []JobBuildInfo `json:"allBuilds"`
+	}
+	_, err := j.Jenkins.Requester.GetJSON(j.Base, &buildsResp, map[string]string{"tree": "allBuilds[fullDisplayName,id,url,number,timestamp,duration,result]"})
 	if err != nil {
 		return nil, err
 	}
@@ -509,4 +530,15 @@ func (j *Job) History() ([]*History, error) {
 		return nil, err
 	}
 	return parseBuildHistory(resp.Body), nil
+}
+
+func (j *Job) GetBuildConsoleOutputWithTimestamp(id int64) string {
+	url := j.Base + fmt.Sprintf("/%d/timestamps", id)
+	queryMap := map[string]string{
+		"time":      "HH:mm:ss.S",
+		"appendLog": "",
+	}
+	var content string
+	j.Jenkins.Requester.GetXML(url, &content, queryMap)
+	return content
 }
