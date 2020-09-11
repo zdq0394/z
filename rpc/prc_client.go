@@ -14,14 +14,15 @@ import (
 )
 
 var (
-	reqidKey        = 0
 	formContentType = "application/x-www-form-urlencoded"
 	jsonContentType = "application/json"
 )
 
 var (
-	UserAgent            = "Golang z/rpc package"
+	UserAgentKey         = "User-Agent"
 	UserKey              = "X-User"
+	ReqidKey             = "X-Reqid"
+	UserAgent            = "github.com/zdq0394/z/rpc"
 	ErrInvalidRequestURL = errors.New("invalid request url")
 )
 
@@ -83,7 +84,7 @@ func (r Client) Do(ctx context.Context, req *http.Request) (resp *http.Response,
 		ctx = context.Background()
 	}
 
-	if reqid, ok := ctx.Value(reqidKey).(string); ok {
+	if reqid, ok := ctx.Value(ReqidKey).(string); ok {
 		req.Header.Set("X-Reqid", reqid)
 	}
 
